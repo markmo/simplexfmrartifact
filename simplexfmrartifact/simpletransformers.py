@@ -47,19 +47,36 @@ class SimpleTransformersModelArtifact(BentoServiceArtifact):
             self._file_path(path),
             **kwargs
         )
+    
+    def _load_from_dict(self, model):
+        if not model.get('model'):
+            raise InvalidArgument(
+                "'model' key is not found in the dictionary. "
+                "Expecting a dictionary with keys 'model'"
+            )
+
+        self._model = model
 
     def _save_package_opts(self, path, opts):
         with open(os.path.join(path, 'package_opts.json'), 'w') as f:
             json.dump(opts, f)
 
-    def pack(self, model, opts):
+    def pack(self, model, opts=None):
+        if opts is None:
+            opts = {}
+
         if isinstance(model, str):
             if os.path.isdir(model):
-                self._save_package_opts(model, opts)
                 self._load_from_directory(model, opts)
-                return self
-        
-        raise InvalidArgument('Expecting a path to the model directory')
+            else:
+                raise InvalidArgument('Expecting a path to the model directory')
+        elif isinstance(model, dict):
+            self._load_from_dict(model)
+        else:
+            raise InvalidArgument('Expecting model to be a path to the model directory or a dict')
+
+        self._save_package_opts(model, opts)
+        return self
 
     def load(self, path):
         with open(os.path.join(path, 'package_opts.json'), 'r') as f:

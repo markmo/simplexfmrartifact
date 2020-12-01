@@ -4,7 +4,7 @@ BentoML artifact framework for simpletransformers.
 
 Installation:
 
-    pip install simplexfmrartifact==0.0.2
+    pip install simplexfmrartifact==0.0.3
 
 Usage example (decorate service):
 
@@ -29,3 +29,7 @@ Usage example (package model):
     }
 
     svc.pack('tm_train3_roberta_l_weigh', model_path, opts)
+
+Alternatively, during training:
+
+    svc.pack('tm_train3_roberta_l_weigh', {'model': my_trained_model})
