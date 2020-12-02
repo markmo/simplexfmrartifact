@@ -4,7 +4,7 @@ BentoML artifact framework for simpletransformers.
 
 Installation:
 
-    pip install simplexfmrartifact==0.0.3
+    pip install simplexfmrartifact==0.0.4
 
 Usage example (decorate service):
 
