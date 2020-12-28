@@ -80,8 +80,12 @@ class SimpleTransformersModelArtifact(BentoServiceArtifact):
 
     def load(self, path):
         path = self._file_path(path)
-        with open(os.path.join(path, 'package_opts.json'), 'r') as f:
-            opts = json.load(f)
+        filepath = os.path.join(path, 'package_opts.json')
+        if os.path.exists(filepath):
+            with open(filepath, 'r') as f:
+                opts = json.load(f)
+        else:
+            opts = {}
 
         return self.pack(path, opts)
 

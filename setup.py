@@ -5,7 +5,7 @@ with open('README.md', 'r') as f:
 
 setuptools.setup(
     name='simplexfmrartifact',
-    version='0.0.4',
+    version='0.0.5',
     author='Mark Moloney',
     author_email='m4rkmo@gmail.com',
     description='BentoML artifact framework for simpletransformers',
@@ -19,7 +19,7 @@ setuptools.setup(
         'Operating System :: OS Independent',
     ],
     install_requires=[
-        'BentoML==0.9.2',
+        'BentoML==0.10.1',
     ],
     python_requires='>=3.6',
 )
