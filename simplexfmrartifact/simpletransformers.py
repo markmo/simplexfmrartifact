@@ -50,9 +50,12 @@ class SimpleTransformersModelArtifact(BentoServiceArtifact):
 
         self._model_opts = opts
 
-    def _load_from_directory(self, path, opts=None):
+    def _load_from_directory(self, path, opts=None, update=False):
         if opts is None:
             self._load_model_opts(path)
+        elif update:
+            self._load_model_opts(path)
+            self._model_opts['opts'].update(opts)
         else:
             self._model_opts = opts
 
@@ -95,10 +98,10 @@ class SimpleTransformersModelArtifact(BentoServiceArtifact):
 
         self._model = model
 
-    def pack(self, model, opts=None):
+    def pack(self, model, opts=None, update=False):
         if isinstance(model, str):
             if os.path.isdir(model):
-                self._load_from_directory(model, opts)
+                self._load_from_directory(model, opts, update)
             else:
                 raise InvalidArgument('Expecting a path to the model directory')
         elif isinstance(model, dict):
