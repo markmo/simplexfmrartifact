@@ -23,8 +23,8 @@ class SimpleTransformersModelArtifact(BentoServiceArtifact):
         super(SimpleTransformersModelArtifact, self).__init__(name)
         print('SimpleTransformersModelArtifact name:', name)
         self._model = None
-        self._model_opts = None
         self._config = None
+        self._metadata = None
 
     def _file_path(self, base_path):
         return os.path.join(base_path, self.name)
@@ -48,18 +48,18 @@ class SimpleTransformersModelArtifact(BentoServiceArtifact):
         else:
             opts = DEFAULT_MODEL_OPTS
 
-        self._model_opts = opts
+        self._metadata = opts
 
-    def _load_from_directory(self, path, opts=None):
-        if opts is None:
+    def _load_from_directory(self, path, metadata=None):
+        if metadata is None:
             self._load_model_opts(path)
         else:
-            self._model_opts = opts
+            self._metadata = metadata
 
-        print('opts:', json.dumps(self._model_opts, indent=4))
+        print('metadata:', json.dumps(self._metadata, indent=4))
         try:
-            classname = self._model_opts['classname']
-            mod = __import__(self._model_opts['classpackage'], fromlist=[classname])
+            classname = self._metadata['classname']
+            mod = __import__(self._metadata['classpackage'], fromlist=[classname])
             clz = getattr(mod, classname)
         except Exception as e:
             print(str(e))
@@ -72,8 +72,8 @@ class SimpleTransformersModelArtifact(BentoServiceArtifact):
         # kwargs = {
         #     #'num_labels': self._config.get('_num_labels', len(self._config['id2label'])),
         # }
-        # kwargs.update(self._model_opts['opts'])
-        kwargs = self._model_opts['opts']
+        # kwargs.update(self._metadata['opts'])
+        kwargs = self._metadata['opts']
 
         self._model = clz(
             self._config.get('model_type', 'roberta'),
@@ -81,28 +81,28 @@ class SimpleTransformersModelArtifact(BentoServiceArtifact):
             **kwargs
         )
     
-    def _load_from_dict(self, model, opts=None):
+    def _load_from_dict(self, model, metadata=None):
         if not model.get('model'):
             raise InvalidArgument(
                 "'model' key is not found in the dictionary. "
                 "Expecting a dictionary with keys 'model'"
             )
 
-        if opts is None:
-            self._model_opts = model.get('model_opts', DEFAULT_MODEL_OPTS)
+        if metadata is None:
+            self._metadata = model.get('model_opts', DEFAULT_MODEL_OPTS)
         else:
-            self._model_opts = opts
+            self._metadata = metadata
 
         self._model = model
 
-    def pack(self, model, opts=None):
+    def pack(self, model, metadata=None):
         if isinstance(model, str):
             if os.path.isdir(model):
-                self._load_from_directory(model, opts)
+                self._load_from_directory(model, metadata)
             else:
                 raise InvalidArgument('Expecting a path to the model directory')
         elif isinstance(model, dict):
-            self._load_from_dict(model, opts)
+            self._load_from_dict(model, metadata)
         else:
             raise InvalidArgument('Expecting model to be a path to the model directory or a dict')
 
@@ -110,16 +110,11 @@ class SimpleTransformersModelArtifact(BentoServiceArtifact):
 
     def load(self, path):
         path = self._file_path(path)
-        return self.pack(path)
-
-    def _save_model_opts(self, path, opts):
-        with open(os.path.join(path, 'model_opts.json'), 'w') as f:
-            json.dump(opts, f)
+        return self.pack(path, self._metadata)
 
     def save(self, dst):
         path = self._file_path(dst)
         os.makedirs(path, exist_ok=True)
-        self._save_model_opts(path, self._model_opts)
         model = self._model.model
         model_to_save = model.module if hasattr(model, 'module') else model
         model_to_save.save_pretrained(path)
