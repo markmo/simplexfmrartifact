@@ -93,7 +93,7 @@ class SimpleTransformersModelArtifact(BentoServiceArtifact):
         else:
             self._metadata = metadata
 
-        self._model = model
+        self._model = model.get('model')
 
     def pack(self, model, metadata=None):
         if isinstance(model, str):
