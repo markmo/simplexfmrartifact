@@ -28,8 +28,8 @@ Usage example (package model):
         }
     }
 
-    svc.pack('tm_train3_roberta_l_weigh', model_path, opts)
+    svc.pack(model_path, opts)
 
 Alternatively, during training:
 
-    svc.pack('tm_train3_roberta_l_weigh', {'model': my_trained_model})
+    svc.pack({'model': my_trained_model, 'model_opts': opts})
