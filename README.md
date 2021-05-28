@@ -18,18 +18,23 @@ Usage example (package model):
 
     svc = MyBentoService()
 
-    opts = {
-        'classpackage': 'simpletransformers.classification',
-        'classname': 'MultiLabelClassificationModel',
-        'num_labels': 33,
-        'args': {
-            'use_multiprocessing': False,
-            'silent': True
+    metadata = {
+        "classpackage": "simpletransformers.classification", 
+        "classname": "ClassificationModel", 
+        "opts": {
+            "use_cuda": true, 
+            "num_labels": 2, 
+            "args": {
+                "use_multiprocessing": false, 
+                "silent": true, 
+                "eval_batch_size": 10, 
+                "fp16": false
+            }
         }
     }
 
-    svc.pack(model_path, opts)
+    svc.pack(model_name, model_path, metadata)
 
 Alternatively, during training:
 
-    svc.pack({'model': my_trained_model, 'model_opts': opts})
+    svc.pack({'model': my_trained_model, 'model_opts': metadata})
