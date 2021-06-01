@@ -32,8 +32,9 @@ Usage example (package model):
             }
         }
     }
-    svc.pack('tm_train3_roberta_l_weigh', model_path, metadata)
+
+    svc.pack(model_name, model_path, metadata)
 
 Alternatively, during training:
 
-    svc.pack('tm_train3_roberta_l_weigh', {'model': my_trained_model})
+    svc.pack({'model': my_trained_model, 'model_opts': metadata})

@@ -1,5 +1,6 @@
 import json
 import os
+import copy
 
 from bentoml.exceptions import (
     InvalidArgument,
@@ -48,18 +49,27 @@ class SimpleTransformersModelArtifact(BentoServiceArtifact):
         else:
             opts = DEFAULT_MODEL_OPTS
 
-        self._metadata = opts
+        return opts
 
-    def _load_from_directory(self, path, metadata=None):
+    def _load_from_directory(self, path, metadata=None, opts=None, update=False):
         if metadata is None:
-            self._load_model_opts(path)
-        else:
-            self._metadata = metadata
-
+            if opts and not update:  # For backward compatibility 
+                metadata = opts
+            else:
+                metadata = self._load_model_opts(path)
+        
+        self._metadata = copy.deepcopy(metadata)
         print('metadata:', json.dumps(self._metadata, indent=4))
+
+        # If update is set, we need to temporary overwrite the metadata for model initialisation
+        # These updates are not meant to be persistent
+        if update:
+            metadata['opts'].update(opts)
+            print('temp metadata:', json.dumps(metadata, indent=4))
+
         try:
-            classname = self._metadata['classname']
-            mod = __import__(self._metadata['classpackage'], fromlist=[classname])
+            classname = metadata['classname']
+            mod = __import__(metadata['classpackage'], fromlist=[classname])
             clz = getattr(mod, classname)
         except Exception as e:
             print(str(e))
@@ -73,7 +83,7 @@ class SimpleTransformersModelArtifact(BentoServiceArtifact):
         #     #'num_labels': self._config.get('_num_labels', len(self._config['id2label'])),
         # }
         # kwargs.update(self._metadata['opts'])
-        kwargs = self._metadata['opts']
+        kwargs = metadata['opts']
 
         self._model = clz(
             self._config.get('model_type', 'roberta'),
@@ -95,10 +105,27 @@ class SimpleTransformersModelArtifact(BentoServiceArtifact):
 
         self._model = model.get('model')
 
-    def pack(self, model, metadata=None):
+    def pack(self, model, metadata=None, opts=None, update=False):
+        """
+        The method is used for packing trained model instances with a BentoService instance and make it ready for save.
+        
+        Parameters:
+            model: 
+                A path to the trained model directory or a dictionary as {'model':model_instance}
+            metadata: 
+                Optional - dict of args used to instantiate the target model artifact to be packed
+            opts: 
+                Optional - dict of args to temporary overwrite metadata if update param is set to True.
+                These args won't be saved with BentoService instance
+            update: 
+                Optional - If set to True the metadata args will be temporary overwritten with matching args set in opts
+        
+        returns: 
+            This BentoService instance
+        """
         if isinstance(model, str):
             if os.path.isdir(model):
-                self._load_from_directory(model, metadata)
+                self._load_from_directory(model, metadata, opts, update)
             else:
                 raise InvalidArgument('Expecting a path to the model directory')
         elif isinstance(model, dict):
