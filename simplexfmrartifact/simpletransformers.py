@@ -49,6 +49,7 @@ class SimpleTransformersModelArtifact(BentoServiceArtifact):
         else:
             opts = DEFAULT_MODEL_OPTS
 
+        self._model_opts = opts
         return opts
 
     def _load_from_directory(self, path, metadata=None, opts=None, update=False):
