@@ -139,9 +139,14 @@ class SimpleTransformersModelArtifact(BentoServiceArtifact):
         path = self._file_path(path)
         return self.pack(path, self._metadata)
 
+    def _save_model_opts(self, path, opts):
+        with open(os.path.join(path, 'model_opts.json'), 'w') as f:
+            json.dump(opts, f)
+
     def save(self, dst):
         path = self._file_path(dst)
         os.makedirs(path, exist_ok=True)
+        self._save_model_opts(path, self._model_opts)
         model = self._model.model
         model_to_save = model.module if hasattr(model, 'module') else model
         model_to_save.save_pretrained(path)
